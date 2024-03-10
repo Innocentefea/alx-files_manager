@@ -9,7 +9,11 @@ class AuthController {
   static async getConnect(req, res) {
     const authHeader = req.headers.authorization;
 
-    const credentials = authHeader.split(' ')[1];
+    if (!authHeader || !authHeader.startsWith('Basic ')) {
+      return res.status(400).json({ error: 'Invalid authorization header' });
+    }
+
+    const credentials = authHeader.slice('Basic '.length);
 
     const decodedCredentials = Buffer.from(credentials, 'base64').toString('utf-8');
 
