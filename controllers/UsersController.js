@@ -1,7 +1,7 @@
-import mongoClient from '../utils/db';
 import sha1 from 'sha1';
-import redisClient from '../utils/redis';
 import { ObjectId } from 'mongodb';
+import mongoClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 class UsersController {
   // method to create new user
@@ -15,15 +15,14 @@ class UsersController {
 
     if (user) return res.status(400).json({ error: 'Already exist' });
 
-    const sha1Pwd = sha1(password)
+    const sha1Pwd = sha1(password);
 
     try {
-        const newUser = await mongoClient.usersCollection.insertOne({ email, password: sha1Pwd});
-        return res.status(200).json({ id: newUser.insertedId, email: email }); 
-    } catch(error) {
-        return res.status(400).json({ error: error.message || error.toString() }); 
+      const newUser = await mongoClient.usersCollection.insertOne({ email, password: sha1Pwd });
+      return res.status(200).json({ id: newUser.insertedId, email });
+    } catch (error) {
+      return res.status(400).json({ error: error.message || error.toString() });
     }
-    
   }
 
   // get user token by token
