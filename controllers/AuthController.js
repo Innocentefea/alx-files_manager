@@ -32,7 +32,7 @@ class AuthController {
 
       const key = `auth_${token}`;
 
-      const duration = 1000 * 60 * 60 * 24;
+      const duration = 3600 * 24;
 
       await redisClient.set(key, user._id.toString(), duration);
 
