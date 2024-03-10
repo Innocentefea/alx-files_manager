@@ -25,7 +25,7 @@ export default class UsersController {
       return;
     }
     const insertionInfo = dbClient.usersCollection.insertOne({ email, password: sha1(password) });
-    const userId = insertionInfo.insertedId.toString();
+    const userId = insertionInfo.insertedId;
 
     userQueue.add({ userId });
     res.status(201).json({ email, id: userId });
