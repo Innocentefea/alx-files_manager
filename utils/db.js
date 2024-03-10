@@ -10,6 +10,8 @@ class DBClient {
     this.client = new MongoClient(url, { useUnifiedTopology: true });
     this.client.connect();
     this.db = this.client.db(database);
+    this.usersCollection = this.db.collection('users');
+    this.filesCollection = this.db.collection('files');
   }
 
   // return true if connected to mongodb
@@ -19,7 +21,7 @@ class DBClient {
 
   // number of users in db
   async nbUsers() {
-    const userCount = await this.db.collection('users').countDocuments();
+    const userCount = await this.usersCollection.countDocuments();
     if (userCount) {
       return userCount;
     }
@@ -28,7 +30,7 @@ class DBClient {
 
   // number of files in db
   async nbFiles() {
-    const fileCount = await this.db.collection('files').countDocuments();
+    const fileCount = await this.filesCollection.countDocuments();
 
     if (fileCount) {
       return fileCount;
@@ -37,4 +39,5 @@ class DBClient {
   }
 }
 
-module.exports = new DBClient();
+const mongoClient = new DBClient();
+export default mongoClient;
