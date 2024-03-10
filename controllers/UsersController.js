@@ -18,7 +18,7 @@ export default class UsersController {
       res.status(400).json({ error: 'Missing password' });
       return;
     }
-    const user = await (await dbClient.usersCollection()).findOne({ email });
+    const user = await dbClient.usersCollection.findOne({ email });
 
     if (user) {
       res.status(400).json({ error: 'Already exist' });
