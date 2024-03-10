@@ -18,7 +18,9 @@ class UsersController {
     const hashedPassword = sha1(password);
 
     try {
-      const newUser = await mongoClient.usersCollection.insertOne({ email, password: hashedPassword });
+      const newUser = await mongoClient.usersCollection.insertOne({
+        email, password: hashedPassword,
+      });
       return res.status(201).json({ id: newUser.insertedId, email });
     } catch (error) {
       return res.status(500).json({ error: error.message || error.toString() });
