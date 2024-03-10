@@ -1,32 +1,26 @@
-import { ObjectId } from 'mongodb';
 import redisClient from './redis';
-import mongoClient from './db';
+import dbClient from './db';
 
-// get user by request
 const userUtils = {
-  async getUser(req) {
-    const tokenHeader = req.headers['x-token'];
+  // return object with id and key
+  async getKeyAndUserId(request) {
+    const obj = { userId: null, key: null };
 
-    const key = `auth_${tokenHeader}`;
+    const tokenHeader = request.header('X-Token');
 
-    const userId = await redisClient.get(key);
+    if (!tokenHeader) return obj;
 
-    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+    obj.key = `auth_${tokenHeader}`;
 
-    if (user) {
-      return user;
-    }
-    return null;
+    obj.userId = await redisClient.get(obj.key);
+
+    return obj;
   },
 
-  async getUserId(req) {
-    const tokenHeader = req.headers['x-token'];
-
-    const key = `auth_${tokenHeader}`;
-
-    const userId = await redisClient.get(key);
-
-    return { userId, key };
+  // return user
+  async getUser(quer) {
+    const user = await dbClient.usersCollection.findOne(quer);
+    return user;
   },
 };
 

@@ -1,4 +1,5 @@
 import sha1 from 'sha1';
+import { ObjectId } from 'mongodb';
 import mongoClient from '../utils/db';
 import userUtils from '../utils/userUtils';
 
@@ -26,7 +27,9 @@ class UsersController {
 
   // get user token by token
   static async getMe(req, res) {
-    const user = await userUtils.getUser(req);
+    const { userId } = await userUtils.getKeyAndUserId(req);
+
+    const user = await userUtils.getUser({ _id: ObjectId(userId) });
 
     console.log(user);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
