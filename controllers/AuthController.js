@@ -13,16 +13,16 @@ class AuthController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const credentials = authHeader.slice(' ')[1];
+    const credentials = authHeader.split(' ')[1];
 
     const decodedCredentials = Buffer.from(credentials, 'base64').toString('utf-8');
 
     const [email, password] = decodedCredentials.split(':');
 
-    const sha1Pwd = sha1(password);
+    const hashedPassword = sha1(password);
 
     try {
-      const user = await mongoClient.usersCollection.findOne({ email, password: sha1Pwd });
+      const user = await mongoClient.usersCollection.findOne({ email, password: hashedPassword });
 
       if (!user) {
         return res.status(401).json({ error: 'Unauthorized' });
