@@ -25,15 +25,18 @@ class RedisClient {
     return this.client.connected;
   }
 
+  // get value by key
   async get(key) {
     const value = await this.getAsync(key);
     return value;
   }
 
+  // set in redis by key value and duration
   async set(key, value, duration) {
     await this.setexAsync(key, duration, value);
   }
 
+  // del from redis using key
   async del(key) {
     await this.delAsync(key);
   }
