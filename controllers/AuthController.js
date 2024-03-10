@@ -10,10 +10,10 @@ class AuthController {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Basic ')) {
-      return res.status(400).json({ error: 'Invalid authorization header' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const credentials = authHeader.slice('Basic '.length);
+    const credentials = authHeader.slice(' ')[1];
 
     const decodedCredentials = Buffer.from(credentials, 'base64').toString('utf-8');
 
@@ -22,10 +22,10 @@ class AuthController {
     const sha1Pwd = sha1(password);
 
     try {
-      const user = await mongoClient.usersCollection.findOne({ email });
+      const user = await mongoClient.usersCollection.findOne({ email, password: sha1Pwd });
 
-      if (!user || user.password !== sha1Pwd) {
-        return res.status(401).json({ error: 'Unauthorized ' });
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
       }
 
       const token = uuidv4();
