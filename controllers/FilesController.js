@@ -131,7 +131,6 @@ class FilesController {
     if (count === '0') return res.json([]);
 
     const skip = (parseInt(req.query.page, 10) || 0) * 20;
-    console.log(skip);
 
     const files = await mongoClient.filesCollection.aggregate([
       { $match: { userId: ObjectId(userId), parentId } },
