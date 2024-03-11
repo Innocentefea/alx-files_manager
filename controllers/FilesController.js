@@ -107,8 +107,49 @@ class FilesController {
     return res.json({ file });
   }
 
-  static getIndex() {
+  static async getIndex(req, res) {
+    const tokenHeader = req.header('X-Token');
 
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${tokenHeader}`);
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const parentId = req.query.parentId && req.query.parentId !== '0'? ObjectId(req.query.parentId) : 0;
+
+    const filesCount = await mongoClient.filesCollection.countDocuments({
+        userId: ObjectId(userId),
+        parentId,
+    });
+
+    if (parseInt(filesCount) === 0) return res.status(200).json([]);
+    
+    const page = req.query.page && req.query.page !== '0' ? parseInt(req.query.page) : 0;
+
+    const jump = page * 20;
+
+    const files = await mongoClient.filesCollection.aggregate([
+        { '$match': { userId: ObjectId(userId), parentId } } ,
+        { '$skip': jump },
+        { '$limit': 20 },
+
+    ]).toArray();
+
+    const filesJson = files.map(file => ({
+        id: file._id,
+        userId: file.userId,
+        name: file.name,
+        type: file.type,
+        isPublic: file.isPublic,
+        parentId: file.parentId
+    }));
+
+    return res.status(200).json(filesJson);
   }
 }
 
