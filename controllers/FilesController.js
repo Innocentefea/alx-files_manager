@@ -121,7 +121,7 @@ class FilesController {
 
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const parentId = req.query.parentId ? ObjectId(req.query.parentId) : 0;
+    const parentId = req.query.parentId ? ObjectId(req.query.parentId) : '0';
 
     const count = await mongoClient.filesCollection.countDocuments({
       userId: ObjectId(userId),
@@ -130,14 +130,12 @@ class FilesController {
 
     if (count === '0') return res.json([]);
 
-    const page = req.query.page ? parseInt(req.query.page, 10) : 0;
-    console.log(page);
-
-    const jump = page * 20;
+    const skip = (parseInt(req.query.page, 10) || 0) * 20;
+    console.log(skip);
 
     const files = await mongoClient.filesCollection.aggregate([
       { $match: { userId: ObjectId(userId), parentId } },
-      { $skip: jump },
+      { $skip: skip },
       { $limit: 20 },
 
     ]).toArray();
