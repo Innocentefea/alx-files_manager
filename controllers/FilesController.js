@@ -84,21 +84,28 @@ class FilesController {
 
   // show file by id
   static async getShow(req, res) {
-    const token = req.header('X-Token');
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
+    const tokenHeader = req.header('X-Token');
 
-    const userId = await redisClient.get(`auth_${token}`);
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${tokenHeader}`);
+
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const fileId = req.params.id;
-    const file = mongoClient.filesCollection.findOne({
-      _id: ObjectId(fileId),
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const file = await mongoClient.filesCollection.findOne({
+      _id: ObjectId(id),
       userId: ObjectId(userId),
     });
 
-    if (!file) return res.status(404).json({ error: 'Not found' });
+    if (!file) res.status(404).json({ error: 'Not found' });
 
-    return res.json(file);
+    const fileJson = { id: file._id, ...file, _id: undefined };
+    return res.json(fileJson);
   }
 
   static async getIndex(req, res) {
