@@ -104,7 +104,7 @@ class FilesController {
 
     if (!file) res.status(404).json({ error: 'Not found' });
 
-    const fileJson = { ...file, id: file._id, _id: undefined };
+    const fileJson = { id: file._id, ...file, _id: undefined };
     return res.json(fileJson);
   }
 
@@ -142,8 +142,8 @@ class FilesController {
     ]).toArray();
 
     const filesJson = files.map((file) => ({
-      ...file,
       id: file._id,
+      ...file,
       _id: undefined,
     }));
 
