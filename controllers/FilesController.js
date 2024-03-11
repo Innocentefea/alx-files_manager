@@ -147,6 +147,70 @@ class FilesController {
 
     return res.json(filesJson);
   }
+
+  static async putPublish(req, res) {
+    const tokenHeader = req.header('X-Token');
+
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${tokenHeader}`);
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const fileId = req.params.id;
+
+    const file = await mongoClient.filesCollection.findOneAndUpdate(
+      { _id: ObjectId(fileId), userId: ObjectId(userId) },
+      { $set: { isPublic: true } },
+      { returnOriginal: false }, // This option ensures that the updated document is returned
+    );
+
+    if (!file.value) return res.status(404).json({ error: 'Not found' });
+
+    const fileJson = {
+      id: file.value._id,
+      ...file.value,
+      _id: undefined,
+    };
+
+    return res.status(200).json(fileJson);
+  }
+
+  static async putUnPublish(req, res) {
+    const tokenHeader = req.header('X-Token');
+
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${tokenHeader}`);
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const fileId = req.params.id;
+
+    const file = await mongoClient.filesCollection.findOneAndUpdate(
+      { _id: ObjectId(fileId), userId: ObjectId(userId) },
+      { $set: { isPublic: false } },
+      { returnOriginal: false }, // This option ensures that the updated document is returned
+    );
+
+    if (!file.value) return res.status(404).json({ error: 'Not found' });
+
+    const fileJson = {
+      id: file.value._id,
+      ...file.value,
+      _id: undefined,
+    };
+
+    return res.status(200).json(fileJson);
+  }
 }
 
 export default FilesController;
