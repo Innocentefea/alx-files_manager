@@ -141,12 +141,9 @@ class FilesController {
     ]).toArray();
 
     const filesJson = files.map((file) => ({
+      ...file,
       id: file._id,
-      userId: file.userId,
-      name: file.name,
-      type: file.type,
-      isPublic: file.isPublic,
-      parentId: file.parentId,
+      _id: undefined,
     }));
 
     return res.json(filesJson);
