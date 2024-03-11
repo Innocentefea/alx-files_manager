@@ -2,7 +2,6 @@ import sha1 from 'sha1';
 import { v4 as uuidv4 } from 'uuid';
 import mongoClient from '../utils/db';
 import redisClient from '../utils/redis';
-import userUtils from '../utils/userUtils';
 
 class AuthController {
   // connect user and set token
@@ -44,11 +43,18 @@ class AuthController {
 
   // disconnect user
   static async getDisconnect(req, res) {
-    const { userId, key } = await userUtils.getKeyAndUserId(req);
+    const tokenHeader = req.header('X-Token');
+
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const key = `auth_${tokenHeader}`;
+
+    const userId = await redisClient.get(key);
+
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     redisClient.del(key);
-    return res.status(204).send();
+    return res.status(204).end();
   }
 }
 

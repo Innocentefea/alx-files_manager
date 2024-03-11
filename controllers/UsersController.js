@@ -1,7 +1,7 @@
 import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
 import mongoClient from '../utils/db';
-import userUtils from '../utils/userUtils';
+import redisClient from '../utils/redis';
 
 class UsersController {
   // method to create new user
@@ -29,9 +29,15 @@ class UsersController {
 
   // get user token by token
   static async getMe(req, res) {
-    const { userId } = await userUtils.getKeyAndUserId(req);
+    const tokenHeader = req.header('X-Token');
 
-    const user = await userUtils.getUser({ _id: ObjectId(userId) });
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const key = `auth_${tokenHeader}`;
+
+    const userId = await redisClient.get(key);
+
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
 
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
