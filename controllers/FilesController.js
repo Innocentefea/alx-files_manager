@@ -91,13 +91,16 @@ class FilesController {
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
     const fileId = req.params.id;
-    const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
+    const file = mongoClient.filesCollection.findOne({
+      _id: ObjectId(fileId),
+      userId: ObjectId(userId),
+    });
 
     if (!file) return res.status(404).json({ error: 'Not found' });
 
     return res.json(file);
   }
-  
+
   static async getIndex(req, res) {
     const token = req.header('X-Token');
     if (!token) return res.status(401).json({ error: 'Unauthorized' });
