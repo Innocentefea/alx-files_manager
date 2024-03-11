@@ -28,19 +28,21 @@ class UsersController {
   }
 
   // get user token by token
-
   static async getMe(req, res) {
-    const token = req.header('X-Token');
-    if (!token) return res.status(401).json({ error: 'Unauthorized' });
-    const userId = await redisClient.get(`auth_${token}`);
+    const tokenHeader = req.header('X-Token');
+
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const key = `auth_${tokenHeader}`;
+
+    const userId = await redisClient.get(key);
+
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
 
-    const users = await mongoClient.usersCollection;
-    const ObjId = new ObjectId(userId);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-    const user = await users.findOne({ _id: ObjId });
-    if (user) return res.status(200).json({ id: userId, email: user.email });
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(200).json({ email: user.email, id: user._id });
   }
 }
 
