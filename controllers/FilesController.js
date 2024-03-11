@@ -84,70 +84,50 @@ class FilesController {
 
   // show file by id
   static async getShow(req, res) {
-    const tokenHeader = req.header('X-Token');
+    const token = req.header('X-Token');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
-
-    const userId = await redisClient.get(`auth_${tokenHeader}`);
-
+    const userId = await redisClient.get(`auth_${token}`);
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+    const fileId = req.params.id;
+    const file = await dbClient.dbClient.collection('files').findOne({ _id: ObjectId(fileId), userId: ObjectId(userId) });
 
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    if (!file) return res.status(404).json({ error: 'Not found' });
 
-    const { id } = req.params;
-    const file = await mongoClient.filesCollection.findOne({
-      _id: ObjectId(id),
-      userId: ObjectId(userId),
-    });
-
-    if (!file) res.status(404).json({ error: 'Not found' });
-
-    const fileJson = { id: file._id, ...file, _id: undefined };
-    return res.json(fileJson);
+    return res.json(file);
   }
-
+  
   static async getIndex(req, res) {
-    const tokenHeader = req.header('X-Token');
+    const token = req.header('X-Token');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
-
-    const userId = await redisClient.get(`auth_${tokenHeader}`);
+    const userId = await redisClient.get(`auth_${token}`);
 
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+    const parentId = req.query.parentId ? ObjectId(req.query.parentId) : '0';
 
-    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+    const filesCount = await mongoClient.filesCollection
+      .countDocuments({ userId: ObjectId(userId), parentId });
 
-    const parentId = req.query.parentId && req.query.parentId !== '0' ? ObjectId(req.query.parentId) : 0;
+    if (filesCount === '0') return res.json([]);
 
-    const filesCount = await mongoClient.filesCollection.countDocuments({
-      userId: ObjectId(userId),
-      parentId,
-    });
+    const skip = (parseInt(req.query.page, 10) || 0) * 20;
+    const files = await mongoClient.filesCollection
+      .aggregate([
+        { $match: { userId: ObjectId(userId), parentId } },
+        { $skip: skip },
+        { $limit: 20 },
+      ]).toArray();
 
-    if (parseInt(filesCount, 10) === 0) return res.json([]);
-
-    const page = req.query.page && req.query.page !== '0' ? parseInt(req.query.page, 10) : 0;
-
-    const jump = page * 20;
-
-    const files = await mongoClient.filesCollection.aggregate([
-      { $match: { userId: ObjectId(userId), parentId } },
-      { $skip: jump },
-      { $limit: 20 },
-
-    ]).toArray();
-
-    const filesJson = files.map((file) => ({
-      id: file._id,
+    const modifyResult = files.map((file) => ({
       ...file,
+      id: file._id,
       _id: undefined,
     }));
 
-    return res.json(filesJson);
+    return res.json(modifyResult);
   }
 }
 
