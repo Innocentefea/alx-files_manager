@@ -104,7 +104,7 @@ class FilesController {
 
     if (!file) res.status(404).json({ error: 'Not found' });
 
-    return res.json({ file });
+    return res.json(file);
   }
 
   static async getIndex(req, res) {
