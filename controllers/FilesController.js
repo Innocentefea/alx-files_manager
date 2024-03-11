@@ -127,7 +127,7 @@ class FilesController {
       parentId,
     });
 
-    if (parseInt(filesCount, 10) === 0) return res.status(200).json([]);
+    if (parseInt(filesCount, 10) === 0) return res.json([]);
 
     const page = req.query.page && req.query.page !== '0' ? parseInt(req.query.page, 10) : 0;
 
@@ -149,7 +149,7 @@ class FilesController {
       parentId: file.parentId,
     }));
 
-    return res.status(200).json(filesJson);
+    return res.json(filesJson);
   }
 }
 
