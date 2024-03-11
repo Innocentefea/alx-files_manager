@@ -1,6 +1,6 @@
 class FilesController {
   // function for a uploading files
-  static async postUpload() {
+  static async postUpload(req, res) {
 
   }
 }
