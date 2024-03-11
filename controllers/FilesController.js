@@ -29,7 +29,7 @@ class FilesController {
 
     if (!type || !['folder', 'file', 'image'].includes(type)) res.status(400).json({ error: 'Missing type' });
 
-    if (!data && type !== 'folder') return res.status(200).json({ error: 'Missing data' });
+    if (!data && type !== 'folder') return res.status(400).json({ error: 'Missing data' });
 
     if (parentId !== 0) {
       const parentFile = await mongoClient.filesCollection.findOne({ _id: ObjectId(parentId) });
@@ -80,6 +80,35 @@ class FilesController {
       isPublic,
       parentId,
     });
+  }
+
+  // show file by id
+  static async getShow(req, res) {
+    const tokenHeader = req.header('X-Token');
+
+    if (!tokenHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = await redisClient.get(`auth_${tokenHeader}`);
+
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const user = await mongoClient.usersCollection.findOne({ _id: ObjectId(userId) });
+
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = req.params;
+    const file = await mongoClient.filesCollection.findOne({
+      _id: ObjectId(id),
+      userId: ObjectId(userId),
+    });
+
+    if (!file) res.status(404).json({ error: 'Not found' });
+
+    return res.json({ file });
+  }
+
+  static getIndex() {
+
   }
 }
 
