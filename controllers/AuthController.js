@@ -6,8 +6,8 @@ import mongoClient from '../utils/db';
 class AuthController {
   // add to redis server
   static async getConnect(req, res) {
-    const credEnc = req.header('Authorization').split(' ')[1];
-    const [email, password] = Buffer.from(credEnc, 'base64').toString('ascii').split(':');
+    const credentials = req.header('Authorization').split(' ')[1];
+    const [email, password] = Buffer.from(credentials, 'base64').toString('ascii').split(':');
     if (!email || !password) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
