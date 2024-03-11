@@ -5,6 +5,7 @@ import path from 'path';
 import { contentType } from 'mime-types';
 import redisClient from '../utils/redis';
 import mongoClient from '../utils/db';
+import { Queue } from 'bull';
 
 class FilesController {
   // function for a uploading files
