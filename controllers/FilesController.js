@@ -3,8 +3,11 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { contentType } from 'mime-types';
+import Queue from 'bull';
 import redisClient from '../utils/redis';
 import mongoClient from '../utils/db';
+
+const fileQueue = new Queue('image thumbnail generation');
 
 class FilesController {
   // function for a uploading files
@@ -72,6 +75,11 @@ class FilesController {
       isPublic,
       localPath,
     });
+
+    // add the fileId and userId to filequeue
+    if (type === 'image') {
+      fileQueue.add({ fileId: newFile.insertedId, userId });
+    }
 
     return res.status(201).json({
       id: newFile.insertedId,
@@ -220,6 +228,8 @@ class FilesController {
 
     const fileId = req.params.id;
 
+    const { size } = req.query;
+
     const file = await mongoClient.filesCollection.findOne({
       _id: ObjectId(fileId),
     });
@@ -238,7 +248,10 @@ class FilesController {
       return res.status(400).json({ error: "A folder doesn't have content" });
     }
 
-    if (file.localPath) {
+    let { localPath } = file;
+    if (size) localPath = `${file.localPath}_${size}`;
+
+    if (localPath) {
       try {
         await fs.promises.stat(file.localPath);
         const mimeType = contentType(file.name);

@@ -1,7 +1,10 @@
 import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
+import Queue from 'bull';
 import mongoClient from '../utils/db';
 import redisClient from '../utils/redis';
+
+const userQueue = new Queue('Add user to queue');
 
 class UsersController {
   // method to create new user
@@ -21,6 +24,8 @@ class UsersController {
       const newUser = await mongoClient.usersCollection.insertOne({
         email, password: hashedPassword,
       });
+
+      userQueue.add({ userId: newUser.insertedId });
       return res.status(201).json({ id: newUser.insertedId, email });
     } catch (error) {
       return res.status(500).json({ error: error.message || error.toString() });
